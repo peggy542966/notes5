@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>顯化帳本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@400;600;700&family=Baloo+2:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#FBEAE3;
+    --bg2:#F3D8D1;
+    --glow:#FFF6EA;
+    --card:#FFFBF7;
+    --card-soft:#FBF0EA;
+    --pink:#CC8E88;
+    --pink-deep:#AD6E67;
+    --pink-pale:#F1D9D3;
+    --lilac:#B48A83;
+    --lilac-pale:#EADCD6;
+    --gold:#DDAE6E;
+    --mint:#C99A63;
+    --text:#6B4A45;
+    --text-mid:#A9847E;
+    --text-faint:#CDB4AC;
+    --line:#EAD3CA;
+    --font-display:'Chiron GoRound TC', 'Noto Sans TC', sans-serif;
+    --font-body:'Noto Sans TC', sans-serif;
+    --font-num:'Baloo 2', 'Chiron GoRound TC', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 10% 0%, #FFF9F2 0%, transparent 45%),
+      radial-gradient(circle at 90% 10%, var(--lilac-pale) 0%, transparent 40%),
+      linear-gradient(160deg, var(--bg1), var(--bg2) 70%);
+    color:var(--text);
+    font-family:var(--font-body);
+    padding:26px 16px 90px;
+  }
+  .wrap{max-width:860px;margin:0 auto;}
+  ::selection{background:var(--pink-pale);}
+
+  /* ---------- Header ---------- */
+  header{margin-bottom:26px;position:relative;}
+  .blob{
+    position:absolute;border-radius:50%;filter:blur(2px);opacity:0.5;z-index:0;
+  }
+  .eyebrow{
+    font-family:var(--font-num);
+    font-size:12px;letter-spacing:0.16em;color:var(--pink-deep);
+    text-transform:uppercase;margin:0 0 6px;font-weight:700;
+  }
+  h1{
+    font-family:var(--font-display);font-weight:700;font-size:32px;
+    margin:0 0 6px;color:var(--text);position:relative;z-index:1;
+  }
+  h1 .sparkle{font-size:22px;}
+  .sub{color:var(--text-mid);font-size:13.5px;line-height:1.6;margin:0;max-width:540px;}
+  .header-row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;margin-top:14px;}
+  .streak{
+    display:inline-flex;align-items:baseline;gap:6px;
+    font-family:var(--font-num);font-size:13px;color:var(--pink-deep);
+    background:var(--card);padding:7px 14px;border-radius:20px;
+    box-shadow:0 3px 10px rgba(107,74,69,0.12);
+  }
+  .streak b{font-size:19px;}
+  .export-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .export-btn{
+    font-family:var(--font-body);font-size:12.5px;font-weight:700;
+    background:var(--card);color:var(--pink-deep);border:1.5px solid var(--pink-pale);
+    border-radius:20px;padding:8px 14px;cursor:pointer;transition:all .15s;
+  }
+  .export-btn:hover{background:var(--pink-pale);border-color:var(--pink);}
+  .export-btn.sync{background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);}
+  .export-btn.sync:hover{filter:brightness(1.08);}
+
+  .quote-card{
+    display:inline-block;background:var(--card);border:1px solid var(--pink-pale);
+    border-radius:4px;padding:14px 20px 16px;margin-top:14px;
+    box-shadow:0 10px 20px rgba(107,74,69,0.1), 0 2px 4px rgba(107,74,69,0.06);
+    transform:rotate(-1.4deg);position:relative;max-width:280px;
+  }
+  .quote-card::before{
+    content:'';position:absolute;top:-7px;left:50%;transform:translateX(-50%) rotate(4deg);
+    width:34px;height:14px;background:rgba(241,217,211,0.85);border:1px solid rgba(205,180,172,0.5);
+  }
+  .quote-card p{
+    margin:0;font-family:var(--font-body);font-style:italic;font-size:12.5px;
+    color:var(--text-mid);line-height:1.6;text-align:center;
+  }
+  .storage-note{
+    font-size:11.5px;color:var(--text-mid);background:var(--card-soft);
+    border:1px solid var(--line);border-radius:20px;padding:7px 14px;
+    margin-top:12px;display:inline-block;max-width:100%;
+  }
+
+  /* ---------- Goal cards ---------- */
+  .goals-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px,1fr));gap:14px;margin-bottom:26px;}
+  .goal-card{
+    background:var(--card);border-radius:22px;padding:18px 18px 15px;
+    position:relative;overflow:hidden;cursor:pointer;
+    box-shadow:0 6px 18px rgba(107,74,69,0.08);
+    border:1.5px solid transparent;transition:all .18s;
+  }
+  .goal-card:hover{transform:translateY(-2px);border-color:var(--pink-pale);box-shadow:0 10px 24px rgba(107,74,69,0.16);}
+  .goal-card::before{
+    content:'';position:absolute;top:-30px;right:-30px;width:90px;height:90px;
+    border-radius:50%;background:var(--pink-pale);opacity:0.5;
+  }
+  .goal-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;position:relative;z-index:1;}
+  .goal-name{font-family:var(--font-display);font-weight:600;font-size:15.5px;color:var(--text);line-height:1.35;}
+  .goal-menu-btn{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:17px;padding:0 4px;line-height:1;}
+  .goal-menu-btn:hover{color:var(--pink-deep);}
+  .goal-menu{
+    display:none;position:absolute;top:42px;right:14px;background:var(--card);
+    border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(90,51,80,0.2);z-index:10;
+    border:1px solid var(--pink-pale);
+  }
+  .goal-menu.open{display:block;}
+  .goal-menu button{display:block;width:100%;text-align:left;padding:10px 16px;background:none;border:none;font-family:var(--font-body);font-size:13px;cursor:pointer;color:var(--text);}
+  .goal-menu button:hover{background:var(--card-soft);}
+  .goal-menu button.danger{color:#D9436A;}
+
+  .goal-pct{font-family:var(--font-num);font-size:28px;font-weight:700;color:var(--pink-deep);margin:6px 0 0;position:relative;z-index:1;}
+  .goal-pct sup{font-size:13px;font-weight:500;opacity:0.7;}
+  .goal-pct.done{color:var(--gold);}
+  .goal-sub-count{font-family:var(--font-body);font-size:11.5px;color:var(--text-mid);margin-bottom:8px;}
+
+  .goal-bar-track{height:10px;border-radius:20px;background:var(--pink-pale);overflow:hidden;position:relative;z-index:1;}
+  .goal-bar-fill{height:100%;background:linear-gradient(90deg, var(--pink), var(--lilac));border-radius:20px;transition:width .5s cubic-bezier(.2,.8,.2,1);position:relative;}
+  .goal-bar-fill.done{background:linear-gradient(90deg, var(--gold), #F3D9AE);}
+  .goal-bar-fill::after{
+    content:'✨';position:absolute;right:-2px;top:50%;transform:translateY(-50%);font-size:11px;
+    opacity:0.9;
+  }
+  .goal-meta{display:flex;justify-content:space-between;font-family:var(--font-body);font-size:11px;color:var(--text-faint);margin-top:7px;position:relative;z-index:1;}
+  .no-plan-note{font-size:11.5px;color:var(--text-faint);margin-top:6px;font-style:italic;}
+
+  .add-goal-card{
+    border:2px dashed var(--pink-pale);border-radius:22px;display:flex;align-items:center;justify-content:center;
+    min-height:150px;background:rgba(255,255,255,0.4);color:var(--pink-deep);font-family:var(--font-display);font-weight:600;
+    font-size:14px;cursor:pointer;transition:all .18s;
+  }
+  .add-goal-card:hover{background:var(--card);border-color:var(--pink);transform:translateY(-2px);}
+
+  /* ---------- Composer ---------- */
+  .composer{background:var(--card);border-radius:24px;padding:22px;margin-bottom:26px;box-shadow:0 8px 22px rgba(107,74,69,0.1);}
+  .composer h2{font-family:var(--font-display);font-size:18px;font-weight:600;margin:0 0 4px;color:var(--text);}
+  .composer .hint{font-size:12.5px;color:var(--text-mid);margin:0 0 14px;}
+  .composer textarea{
+    width:100%;min-height:60px;resize:vertical;border:1.5px solid var(--line);border-radius:14px;
+    padding:12px 14px;font-family:var(--font-body);font-size:14px;background:var(--card-soft);color:var(--text);
+  }
+  .composer textarea:focus{outline:none;border-color:var(--pink);}
+  .date-row{display:flex;align-items:center;gap:10px;margin-top:10px;}
+  .date-row label{font-size:12px;color:var(--text-mid);}
+  .date-row input[type=date]{
+    font-family:var(--font-num);font-size:13px;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;
+    background:var(--card-soft);color:var(--text);
+  }
+
+  .task-section-title{font-size:13px;font-weight:700;color:var(--text);margin:18px 0 8px;font-family:var(--font-body);}
+  .task-goal-block{margin-bottom:12px;}
+  .task-goal-name{font-size:12px;color:var(--pink-deep);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .task-goal-name a{font-size:11px;color:var(--text-mid);font-weight:400;text-decoration:underline;cursor:pointer;}
+  .task-chip-list{display:flex;flex-wrap:wrap;gap:7px;}
+  .task-chip{
+    font-family:var(--font-body);font-size:12.5px;border:1.5px solid var(--line);background:var(--card-soft);
+    border-radius:20px;padding:8px 14px;cursor:pointer;color:var(--text);transition:all .15s;
+    display:flex;align-items:center;gap:6px;
+  }
+  .task-chip .box{width:14px;height:14px;border-radius:5px;border:1.5px solid var(--text-faint);flex-shrink:0;position:relative;}
+  .task-chip.checked{background:var(--pink); border-color:var(--pink);color:#fff;}
+  .task-chip.checked .box{background:#fff;border-color:#fff;}
+  .task-chip.checked .box::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--pink-deep);font-weight:700;}
+  .empty-plan-inline{font-size:12px;color:var(--text-faint);font-style:italic;}
+  .celebrate-inline{font-size:12.5px;color:var(--mint);font-weight:700;}
+
+  .submit-btn{
+    margin-top:18px;width:100%;background:linear-gradient(90deg, var(--pink), var(--lilac));color:#fff;
+    border:none;border-radius:16px;padding:14px;font-family:var(--font-display);font-weight:700;font-size:15px;
+    cursor:pointer;transition:transform .12s, filter .2s;letter-spacing:0.02em;
+  }
+  .submit-btn:hover{filter:brightness(1.06);}
+  .submit-btn:active{transform:scale(0.99);}
+  .submit-btn:disabled{background:var(--text-faint);cursor:not-allowed;}
+
+  /* ---------- Ledger ---------- */
+  .ledger h2{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--text);margin:0 0 14px;}
+  .day-group{margin-bottom:16px;}
+  .day-label{
+    font-family:var(--font-num);font-size:12px;color:var(--pink-deep);font-weight:700;
+    letter-spacing:0.03em;margin-bottom:8px;padding-bottom:6px;border-bottom:2px dotted var(--pink-pale);
+  }
+  .entry{background:var(--card);border-radius:16px;padding:12px 34px 12px 15px;margin-bottom:8px;box-shadow:0 3px 10px rgba(107,74,69,0.06);position:relative;}
+  .entry-del-btn{
+    position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-faint);
+    cursor:pointer;font-size:15px;padding:3px 7px;line-height:1;border-radius:6px;
+  }
+  .entry-del-btn:hover{color:#D9436A;background:rgba(217,67,106,0.08);}
+  .tag.fail{background:#FBDCDC;color:#B23B3B;}
+  .retry-btn{
+    font-family:var(--font-body);font-size:10.5px;background:none;border:1px solid var(--pink-pale);
+    color:var(--pink-deep);border-radius:12px;padding:3px 9px;cursor:pointer;margin-left:4px;
+  }
+  .retry-btn:hover{background:var(--pink-pale);}
+  .entry-note{font-size:13.5px;color:var(--text);line-height:1.55;margin-bottom:7px;white-space:pre-wrap;}
+  .entry-tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{
+    font-family:var(--font-body);font-size:11px;background:var(--pink-pale);color:var(--pink-deep);
+    border-radius:20px;padding:4px 10px;font-weight:600;
+  }
+  .tag.plain{background:var(--lilac-pale);color:var(--lilac);}
+  .empty-state{text-align:center;color:var(--text-mid);font-size:13px;padding:40px 10px;border:2px dashed var(--pink-pale);border-radius:18px;background:rgba(255,255,255,0.4);}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(90,51,80,0.35);align-items:center;justify-content:center;z-index:50;padding:18px;backdrop-filter:blur(2px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--card);border-radius:22px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;}
+  .modal h3{font-family:var(--font-display);font-size:18px;margin:0 0 4px;color:var(--text);}
+  .modal .modal-hint{font-size:12px;color:var(--text-mid);margin:0 0 14px;}
+  .modal input, .modal textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px 13px;
+    font-family:var(--font-body);font-size:13.5px;margin-bottom:10px;background:var(--card-soft);color:var(--text);
+  }
+  .modal textarea{min-height:50px;resize:vertical;}
+  .modal-actions{display:flex;gap:8px;margin-top:10px;}
+  .modal-actions button{flex:1;padding:11px;border-radius:12px;border:none;font-family:var(--font-display);font-size:13.5px;font-weight:700;cursor:pointer;}
+  .modal-actions .primary{background:linear-gradient(90deg, var(--pink), var(--lilac));color:#fff;}
+  .modal-actions .secondary{background:var(--card-soft);color:var(--text-mid);}
+  .modal-actions .ghost{background:none;color:var(--pink-deep);border:1.5px solid var(--pink-pale);}
+
+  .ai-loading{display:flex;align-items:center;gap:10px;padding:16px 0;font-size:13px;color:var(--pink-deep);}
+  .spin{width:18px;height:18px;border:3px solid var(--pink-pale);border-top-color:var(--pink);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .plan-phase-label{font-size:11.5px;font-weight:700;color:var(--lilac);margin:14px 0 6px;letter-spacing:0.03em;}
+  .plan-task-row{display:flex;align-items:flex-start;gap:9px;padding:7px 0;}
+  .plan-task-row input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--pink);flex-shrink:0;}
+  .plan-task-text{font-size:13px;color:var(--text);line-height:1.5;flex:1;}
+  .plan-task-text.done{text-decoration:line-through;color:var(--text-faint);}
+  .plan-task-date{font-size:10px;color:var(--text-faint);}
+  .add-task-row{display:flex;gap:6px;margin-top:12px;}
+  .add-task-row input{flex:1;margin-bottom:0;}
+  .add-task-row button{
+    background:var(--pink-pale);color:var(--pink-deep);border:none;border-radius:10px;padding:0 14px;font-weight:700;cursor:pointer;font-size:16px;
+  }
+  .detail-progress{display:flex;align-items:center;gap:12px;margin:10px 0 4px;}
+  .detail-pct{font-family:var(--font-num);font-size:26px;font-weight:700;color:var(--pink-deep);}
+
+  .mood-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .mood-chip{
+    font-size:21px;background:var(--card-soft);border:1.5px solid var(--line);border-radius:14px;
+    padding:6px 11px;cursor:pointer;transition:all .15s;opacity:0.5;line-height:1;
+  }
+  .mood-chip.selected{opacity:1;border-color:var(--pink);background:var(--pink-pale);transform:scale(1.08);}
+
+  .ledger-tabs{display:flex;gap:8px;margin-bottom:14px;}
+  .ledger-tab{
+    font-family:var(--font-body);font-size:12.5px;font-weight:700;background:var(--card-soft);
+    color:var(--text-mid);border:1.5px solid transparent;border-radius:20px;padding:7px 15px;cursor:pointer;
+  }
+  .ledger-tab.active{background:var(--pink);color:#fff;}
+
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .cal-header button{
+    background:var(--card-soft);border:1.5px solid var(--pink-pale);color:var(--pink-deep);
+    border-radius:10px;width:32px;height:32px;font-size:15px;cursor:pointer;
+  }
+  .cal-header button:hover{background:var(--pink-pale);}
+  .cal-title{font-family:var(--font-display);font-weight:700;font-size:15.5px;color:var(--text);}
+  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:var(--text-faint);margin-bottom:6px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-cell{
+    aspect-ratio:1;border-radius:13px;background:var(--card);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:1px;cursor:pointer;position:relative;
+    border:1.5px solid transparent;transition:all .15s;box-shadow:0 2px 6px rgba(107,74,69,0.05);
+  }
+  .cal-cell.empty{background:none;box-shadow:none;cursor:default;}
+  .cal-cell:hover:not(.empty){border-color:var(--pink-pale);transform:translateY(-1px);}
+  .cal-cell.today{border-color:var(--pink);}
+  .cal-cell .day-num{font-family:var(--font-num);font-size:11px;color:var(--text-mid);}
+  .cal-cell .day-mood{font-size:16px;margin-top:1px;}
+  .cal-cell .day-dot{width:5px;height:5px;border-radius:50%;background:var(--pink);position:absolute;bottom:6px;}
+  .day-modal-mood{font-size:20px;margin-right:8px;vertical-align:middle;}
+  .checkin-text{white-space:pre-wrap;font-size:13.5px;line-height:1.8;color:var(--text);max-height:40vh;overflow-y:auto;}
+  .checkin-divider{height:1px;background:var(--line);margin:16px 0;}
+  #checkinChatLog{max-height:220px;overflow-y:auto;margin-bottom:4px;}
+  .chat-bubble{margin-bottom:10px;font-size:13px;line-height:1.55;display:flex;}
+  .chat-bubble.user{justify-content:flex-end;}
+  .chat-bubble.assistant{justify-content:flex-start;}
+  .chat-bubble .bubble-text{
+    display:inline-block;padding:8px 13px;max-width:82%;white-space:pre-wrap;text-align:left;
+  }
+  .chat-bubble.user .bubble-text{background:var(--pink);color:#fff;border-radius:14px 14px 4px 14px;}
+  .chat-bubble.assistant .bubble-text{background:var(--card-soft);color:var(--text);border-radius:14px 14px 14px 4px;}
+  .checkin-chat-input-row{display:flex;gap:8px;margin-top:8px;}
+  .checkin-chat-input-row input{
+    flex:1;border:1.5px solid var(--line);border-radius:20px;padding:9px 14px;
+    font-family:var(--font-body);font-size:13px;background:var(--card-soft);color:var(--text);
+  }
+  .checkin-chat-input-row button{
+    background:var(--pink);color:#fff;border:none;border-radius:20px;padding:9px 18px;
+    font-family:var(--font-body);font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;
+  }
+  .checkin-chat-input-row button:hover{filter:brightness(1.06);}
+  .roadmap-del-btn{
+    background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:16px;
+    line-height:1;padding:0 4px;flex-shrink:0;
+  }
+  .roadmap-del-btn:hover{color:#D9436A;}
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--text);color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;
+    font-family:var(--font-body);opacity:0;pointer-events:none;transition:all .3s;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:60;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:480px){
+    h1{font-size:26px;}
+    .goals-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">✨ Manifestation Ledger</p>
+    <h1>顯化帳本</h1>
+    <p class="sub">寫下目標，AI 幫你排一份細緻的參考課表；每天寫下你做了什麼，AI 自動判斷這對哪些目標有貢獻、貢獻多少，進度自己累積。</p>
+    <div class="quote-card" id="quoteCard"><p></p></div>
+    <p class="storage-note" id="storageModeNote" style="display:none;"></p>
+    <div class="header-row">
+      <div class="streak" id="streakBox"></div>
+      <div class="export-row">
+        <button class="export-btn sync" id="checkinBtn">🔍 更新現況</button>
+        <button class="export-btn sync" id="aiSettingsBtn">⚙️ AI 設定</button>
+        <button class="export-btn sync" id="exportJsonBtn">💾 匯出備份</button>
+        <button class="export-btn sync" id="importJsonBtn">📥 匯入備份</button>
+        <button class="export-btn" id="exportImgBtn">🖼️ 匯出圖片</button>
+        <button class="export-btn" id="exportCsvBtn">📄 匯出表格</button>
+      </div>
+      <input type="file" id="importFileInput" accept="application/json" style="display:none">
+    </div>
+  </header>
+
+  <div class="goals-grid" id="goalsGrid"></div>
+
+  <div class="composer">
+    <h2>今天，你做了什麼？ 💗</h2>
+    <p class="hint">寫下來就好，AI 會自動判斷這對哪些目標有幫助。</p>
+    <textarea id="noteInput" placeholder="例如：讀了一點書、練習了一題……什麼都可以寫"></textarea>
+    <div id="moodRow"></div>
+    <div class="date-row">
+      <label>日期</label>
+      <input type="date" id="dateInput">
+    </div>
+    <div id="taskSection"></div>
+    <button class="submit-btn" id="submitBtn">記錄今天 🌸</button>
+  </div>
+
+  <div class="ledger">
+    <h2>歷史紀錄</h2>
+    <div class="ledger-tabs">
+      <button class="ledger-tab active" data-view="list" id="tabList">📋 列表</button>
+      <button class="ledger-tab" data-view="calendar" id="tabCalendar">📅 日曆</button>
+    </div>
+    <div id="listView">
+      <div id="ledgerBody"></div>
+    </div>
+    <div id="calendarView" style="display:none;">
+      <div class="cal-header">
+        <button id="calPrev">‹</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button id="calNext">›</button>
+      </div>
+      <div class="cal-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Day detail modal (from calendar) -->
+<div class="modal-overlay" id="dayModalOverlay">
+  <div class="modal">
+    <h3 id="dayModalTitle">日期</h3>
+    <div id="dayModalBody"></div>
+    <div class="modal-actions">
+      <button class="secondary" id="dayModalClose">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI check-in modal: overall status review & advice -->
+<div class="modal-overlay" id="checkinOverlay">
+  <div class="modal" style="max-width:520px;">
+    <h3>🔍 目前狀況與建議</h3>
+    <div id="checkinBody"></div>
+    <div id="checkinChatSection" style="display:none;">
+      <div class="checkin-divider"></div>
+      <div id="checkinChatLog"></div>
+      <div class="checkin-chat-input-row">
+        <input type="text" id="checkinChatInput" placeholder="想追問什麼都可以問問看...">
+        <button id="checkinChatSend">送出</button>
+      </div>
+      <p class="modal-hint" style="margin:14px 0 6px;">討論完了嗎？可以請 AI 根據這次的討論，重新規劃某個目標的課表：</p>
+      <div style="display:flex;gap:8px;">
+        <select id="checkinGoalSelect" style="flex:1;border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;font-family:var(--font-body);font-size:13px;background:var(--card-soft);color:var(--text);"></select>
+        <button class="ghost" id="checkinReplanBtn" style="white-space:nowrap;">🔄 重新規劃</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" id="checkinClose">關閉</button>
+      <button class="ghost" id="checkinRefresh">🔄 重新檢視</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI settings modal (bring-your-own API key: Gemini free tier or Anthropic paid) -->
+<div class="modal-overlay" id="aiSettingsOverlay">
+  <div class="modal">
+    <h3>⚙️ AI 設定</h3>
+    <p class="modal-hint">貼上妳自己的 API Key，AI 規劃課表就會直接呼叫，不用再依賴內建、常常連不上的連線。</p>
+    <p class="modal-hint" style="margin:-4px 0 4px;">選擇服務：</p>
+    <select id="aiProviderSelect" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px 13px;font-family:var(--font-body);font-size:13.5px;margin-bottom:12px;background:var(--card-soft);color:var(--text);">
+      <option value="gemini">Google Gemini（推薦，免費，不用信用卡）</option>
+      <option value="anthropic">Anthropic Claude（品質更好，需要自己付費）</option>
+    </select>
+
+    <div id="geminiFields">
+      <p class="modal-hint">1. 到 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--pink-deep);">aistudio.google.com/apikey</a>，用 Google 帳號登入，點「Create API Key」（完全免費，不用信用卡）<br>2. 貼在下面（只會存在這個瀏覽器裡）</p>
+      <input type="password" id="geminiApiKeyInput" placeholder="貼上妳的 Gemini API Key">
+      <p class="modal-hint" style="font-size:11px;">💡 免費額度大概每天上百次請求，課表規劃這種用法完全夠用，不會被收費。</p>
+    </div>
+
+    <div id="anthropicFields" style="display:none;">
+      <p class="modal-hint">1. 到 <a href="https://console.anthropic.com" target="_blank" rel="noopener" style="color:var(--pink-deep);">console.anthropic.com</a> 登入/註冊，建立一組 API Key（跟妳的 Claude Pro 月費是分開計費的）<br>2. 貼在下面（只會存在這個瀏覽器裡）</p>
+      <input type="password" id="anthropicApiKeyInput" placeholder="sk-ant-... 貼上妳的 API Key">
+      <p class="modal-hint" style="margin:-4px 0 4px;">選擇模型：</p>
+      <select id="aiModelSelect" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px 13px;font-family:var(--font-body);font-size:13.5px;margin-bottom:10px;background:var(--card-soft);color:var(--text);">
+        <option value="claude-sonnet-5">Claude Sonnet 5（推薦，品質較好）</option>
+        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（較快、較便宜）</option>
+        <option value="claude-opus-4-8">Claude Opus 4.8（最強，較貴）</option>
+      </select>
+      <p class="modal-hint" style="font-size:11px;">⚠️ 這是妳自己付費的額度，規劃一次課表大概花不到台幣 1 元。</p>
+    </div>
+
+    <p class="modal-hint" style="font-size:11px;">Key 只存在這個瀏覽器裡，不要在公用電腦上使用這個功能。</p>
+    <div class="modal-actions">
+      <button class="secondary" id="aiSettingsClose">關閉</button>
+      <button class="ghost" id="aiSettingsClear">清除已儲存的 Key</button>
+      <button class="primary" id="aiSettingsSave">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / edit goal modal -->
+<div class="modal-overlay" id="goalModalOverlay">
+  <div class="modal">
+    <h3 id="goalModalTitle">新增目標</h3>
+    <p class="modal-hint">寫上你的目標，AI 會幫你規劃一份細緻的參考課表——這只是方向參考，不用照表操課。</p>
+    <input type="text" id="goalNameInput" placeholder="例如：成為量化交易專家、考取高業證照">
+    <textarea id="goalContextInput" placeholder="補充背景（選填）：目前的程度、每天大概能花多少時間……"></textarea>
+
+    <p class="modal-hint" style="margin-top:2px;">💡 也可以直接請 Claude 聊天視窗幫你規劃課表，複製後貼在這裡：</p>
+    <textarea id="pastePlanInput" placeholder="貼上格式範例：
+打基礎
+- 讀完課本第一章
+- 做10題考古題
+刻意練習
+- 每天寫5題選擇題，持續一週
+
+（沒有分階段也沒關係，一行一個任務就好）"></textarea>
+    <div class="modal-actions">
+      <button class="ghost" id="usePasteBtn">用貼上的課表 ✓</button>
+    </div>
+
+    <div id="aiPlanArea"></div>
+    <div class="modal-actions">
+      <button class="secondary" id="goalModalCancel">取消</button>
+      <button class="ghost" id="goalModalSkipAi">手動新增</button>
+      <button class="primary" id="goalModalGenerate">✨ AI 幫我規劃</button>
+    </div>
+  </div>
+</div>
+
+<!-- Goal detail modal -->
+<div class="modal-overlay" id="detailModalOverlay">
+  <div class="modal">
+    <h3 id="detailGoalName">目標名稱</h3>
+    <div class="detail-progress">
+      <div class="detail-pct" id="detailPct">0%</div>
+      <div style="flex:1"><div class="goal-bar-track"><div class="goal-bar-fill" id="detailBarFill" style="width:0%"></div></div></div>
+    </div>
+    <div id="detailTaskList"></div>
+    <div class="add-task-row">
+      <input type="text" id="addTaskInput" placeholder="新增一個任務...">
+      <button id="addTaskBtn">+</button>
+    </div>
+    <textarea id="pasteMoreTasksInput" placeholder="或一次貼上多個任務，一行一個（可以先請 Claude 聊天視窗幫你補充）" style="margin-top:8px;min-height:44px;"></textarea>
+    <div class="modal-actions">
+      <button class="ghost" id="pasteMoreTasksBtn">加入貼上的任務</button>
+      <button class="ghost" id="regenerateBtn">✨ AI 補充任務</button>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" id="backfillBtn">📚 回顧過去紀錄</button>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary" id="detailCloseBtn">關閉</button>
+      <button class="secondary" id="renameGoalBtn">改名稱</button>
+      <button class="primary" style="background:#D9436A" id="deleteGoalBtn">刪除目標</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'manifest-ledger-data-v2';
+  const storageAdapter = (function(){
+    const hasCloud = (typeof window.storage !== 'undefined') && window.storage && typeof window.storage.get === 'function';
+    return {
+      isCloud: hasCloud,
+      async get(key){
+        if(hasCloud){
+          try{ return await window.storage.get(key, false); }
+          catch(e){ return null; }
+        }
+        const v = localStorage.getItem(key);
+        return v ? { key, value: v, shared:false } : null;
+      },
+      async set(key, value){
+        if(hasCloud){
+          try{ return await window.storage.set(key, value, false); }
+          catch(e){
+            // cloud failed unexpectedly — fall back to local so nothing is lost
+            localStorage.setItem(key, value);
+            return { key, value, shared:false };
+          }
+        }
+        localStorage.setItem(key, value);
+        return { key, value, shared:false };
+      }
+    };
+  })();
+  let data = { goals: [], entries: [] };
+  let openGoalId = null; // for detail modal
+
+  const $ = (sel) => document.querySelector(sel);
+  const goalsGrid = $('#goalsGrid');
+  const ledgerBody = $('#ledgerBody');
+  const streakBox = $('#streakBox');
+  const dateInput = $('#dateInput');
+  const noteInput = $('#noteInput');
+  const submitBtn = $('#submitBtn');
+  const toast = $('#toast');
+  const taskSection = $('#taskSection');
+
+  const MOODS = [['😊','開心'],['😌','平靜'],['😐','普通'],['😔','低落'],['😫','疲憊'],['🥹','感動']];
+  let selectedMood = null;
+  function renderMoodRow(){
+    let html = '<div class="task-section-title" style="margin:14px 0 6px;">今天心情如何？（選填）</div><div class="mood-row">';
+    MOODS.forEach(([emo,label])=>{
+      html += `<button type="button" class="mood-chip ${selectedMood===emo?'selected':''}" data-mood="${emo}" title="${label}">${emo}</button>`;
+    });
+    html += '</div>';
+    $('#moodRow').innerHTML = html;
+    $('#moodRow').querySelectorAll('.mood-chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        selectedMood = (selectedMood===chip.dataset.mood) ? null : chip.dataset.mood;
+        renderMoodRow();
+      });
+    });
+  }
+
+  const AFFIRMATIONS = [
+    '你已經很努力了 🌷',
+    '小小的一步，也是進步 🕊️',
+    '慢慢來，比較快 🌿',
+    '今天的你，值得被肯定 ✨',
+    '一點一點，累積成你想要的樣子 💗',
+    '不用跟誰比，跟昨天的自己比就好 🌙',
+    '休息也是計畫的一部分 🍵'
+  ];
+  (function renderQuote(){
+    const idx = new Date().getDate() % AFFIRMATIONS.length;
+    $('#quoteCard p').textContent = AFFIRMATIONS[idx];
+  })();
+
+  function todayStr(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  dateInput.value = todayStr();
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 2000);
+  }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  async function loadData(){
+    try{
+      const res = await storageAdapter.get(STORAGE_KEY);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        data = { goals: parsed.goals||[], entries: parsed.entries||[] };
+      }
+    }catch(e){ /* no data yet */ }
+    migrateData();
+    updateStorageModeNote();
+    render();
+  }
+  async function saveData(){
+    try{
+      await storageAdapter.set(STORAGE_KEY, JSON.stringify(data));
+    }catch(e){
+      showToast('儲存失敗，請稍後再試 🥺');
+      console.error(e);
+    }
+  }
+
+  function updateStorageModeNote(){
+    const note = $('#storageModeNote');
+    if(!note) return;
+    if(!storageAdapter.isCloud){
+      note.style.display='block';
+      note.textContent = '💾 目前資料存在這個瀏覽器裡（離線模式）。想在手機、電腦間同步，記得用「匯出備份／匯入備份」。';
+    }else{
+      note.style.display='none';
+    }
+  }
+
+  function goalProgress(goal){
+    return goal.progress || 0;
+  }
+
+  function migrateData(){
+    // Older data stored progress as tasks-done/total, with a done flag per task.
+    // Migrate to a standalone accumulated `progress` number and a reference-only roadmap.
+    data.goals.forEach(goal=>{
+      if(typeof goal.progress !== 'number'){
+        if(goal.tasks && goal.tasks.length>0){
+          const done = goal.tasks.filter(t=>t.done).length;
+          goal.progress = (done/goal.tasks.length)*100;
+        }else{
+          goal.progress = 0;
+        }
+      }
+      if(!goal.roadmap){
+        goal.roadmap = (goal.tasks||[]).map(t=>({ id: t.id, phase: t.phase||'', text: t.text }));
+      }
+      delete goal.tasks;
+    });
+    data.entries.forEach(entry=>{
+      if(!entry.contributions){
+        // Legacy completedTasks carried no real score (delta 0) — showing that as
+        // a "+0%" tag was just confusing, so treat these as plain diary entries instead.
+        entry.contributions = [];
+      }
+      delete entry.completedTasks;
+      if(!entry.contributionStatus) entry.contributionStatus = 'ok';
+    });
+  }
+
+  // ================= AI plan generation =================
+  const PLAN_SYS_PROMPT = "你是一位務實、有經驗的目標規劃教練。根據使用者的目標，規劃一份具體、細緻的參考行動清單，讓使用者知道有哪些事情可以做——這是靈感與方向參考，使用者不需要照表操課。只回傳 JSON，不要有任何其他文字、不要 markdown code fence。JSON 格式：{\"tasks\":[{\"phase\":\"階段名稱\",\"text\":\"具體行動\"}]}。規則：1) 用繁體中文。2) 共 18~25 個行動項目，分成 4~6 個階段，階段名稱要短（例如「打基礎」「刻意練習」「模擬實戰」）。3) 每個項目要非常具體、細緻——盡量把大任務拆成更小的步驟，是一個人可以在一天內完成的小行動，不要寫空泛的話。4) 項目文字盡量簡短，20字以內。5) 項目要有先後順序，由淺入深。";
+
+  function tryRepairTruncatedTasks(rawText){
+    // Find the array start, then walk backwards from the end looking for the
+    // last complete `}` that closes a task object, and try closing the JSON there.
+    const arrStart = rawText.indexOf('[');
+    if(arrStart < 0) return null;
+    let idx = rawText.lastIndexOf('}');
+    while(idx > arrStart){
+      const candidate = rawText.slice(0, idx+1) + ']}';
+      try{
+        const parsed = JSON.parse(candidate);
+        if(parsed.tasks && Array.isArray(parsed.tasks) && parsed.tasks.length > 0) return parsed.tasks;
+      }catch(e){ /* keep walking backwards */ }
+      idx = rawText.lastIndexOf('}', idx-1);
+    }
+    return null;
+  }
+
+  function extractTasksJson(rawText){
+    let clean = rawText.replace(/```json/g,'').replace(/```/g,'').trim();
+    const firstBrace = clean.indexOf('{');
+    if(firstBrace >= 0) clean = clean.slice(firstBrace);
+    const lastBrace = clean.lastIndexOf('}');
+    let trimmed = lastBrace >= 0 ? clean.slice(0, lastBrace+1) : clean;
+    try{
+      const parsed = JSON.parse(trimmed);
+      if(parsed.tasks && Array.isArray(parsed.tasks) && parsed.tasks.length > 0) return parsed.tasks;
+      throw new Error('AI 回傳的資料沒有課表內容，格式不符預期');
+    }catch(parseErr){
+      // Likely truncated mid-generation — try to salvage whatever complete tasks exist
+      const repaired = tryRepairTruncatedTasks(clean);
+      if(repaired && repaired.length > 0) return repaired;
+      throw new Error('AI 回傳的格式看不懂：' + parseErr.message + '｜原始內容：' + rawText.slice(0,200));
+    }
+  }
+
+  async function callGeminiRaw(systemPrompt, history, maxTokens, attempt){
+    attempt = attempt || 1;
+    const apiKey = localStorage.getItem('gemini-api-key');
+    if(!apiKey) throw new Error('請先在「⚙️ AI 設定」裡貼上 Gemini API Key');
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=>controller.abort(), 25000);
+    const contents = history.map(h => ({ role: h.role==='assistant' ? 'model' : 'user', parts:[{ text: h.text }] }));
+    let res;
+    try{
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: contents,
+          generationConfig: { maxOutputTokens: maxTokens }
+        })
+      });
+    }catch(networkErr){
+      clearTimeout(timeoutId);
+      if(networkErr.name === 'AbortError'){
+        if(attempt < 3){ await new Promise(r=>setTimeout(r, 1500)); return callGeminiRaw(systemPrompt, history, maxTokens, attempt+1); }
+        throw new Error('AI 服務逾時（等了 25 秒沒回應），可能是網路不穩或服務忙碌，再試一次看看');
+      }
+      if(attempt < 2){ await new Promise(r=>setTimeout(r,700)); return callGeminiRaw(systemPrompt, history, maxTokens, attempt+1); }
+      throw new Error('連不上 Gemini 服務（網路問題）：' + networkErr.message);
+    }
+    clearTimeout(timeoutId);
+    if(!res.ok){
+      let bodyText=''; try{ bodyText = await res.text(); }catch(e2){}
+      if(res.status === 503 && attempt < 4){
+        await new Promise(r=>setTimeout(r, attempt*1500));
+        return callGeminiRaw(systemPrompt, history, maxTokens, attempt+1);
+      }
+      if(res.status !== 503 && attempt < 2){
+        await new Promise(r=>setTimeout(r,700));
+        return callGeminiRaw(systemPrompt, history, maxTokens, attempt+1);
+      }
+      if(res.status === 503){
+        throw new Error('Gemini 目前太多人在用（伺服器過載），已經自動重試了幾次還是一樣，建議等 1-2 分鐘再試一次');
+      }
+      throw new Error(`Gemini 服務回應錯誤（狀態碼 ${res.status}）：` + bodyText.slice(0,200));
+    }
+    const json = await res.json();
+    const text = (json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts || [])
+      .map(p=>p.text||'').join('\n');
+    if(!text) throw new Error('Gemini 沒有回傳內容，可能是被安全機制擋下，換個描述看看');
+    return text;
+  }
+
+  async function callAnthropicRaw(systemPrompt, history, maxTokens, attempt){
+    attempt = attempt || 1;
+    const myKey = localStorage.getItem('anthropic-api-key');
+    const myModel = localStorage.getItem('anthropic-model') || 'claude-sonnet-5';
+    const headers = { "Content-Type": "application/json" };
+    let model = "claude-sonnet-5";
+    if(myKey){
+      headers["x-api-key"] = myKey;
+      headers["anthropic-version"] = "2023-06-01";
+      headers["anthropic-dangerous-direct-browser-access"] = "true";
+      model = myModel;
+    }
+    const messages = history.map(h => ({ role: h.role==='assistant' ? 'assistant' : 'user', content: h.text }));
+    let res;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=>controller.abort(), 25000);
+    try{
+      res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: headers,
+        signal: controller.signal,
+        body: JSON.stringify({ model: model, max_tokens: maxTokens, system: systemPrompt, messages: messages })
+      });
+    }catch(networkErr){
+      clearTimeout(timeoutId);
+      if(networkErr.name === 'AbortError'){
+        if(attempt < 3){ await new Promise(r=>setTimeout(r, 1500)); return callAnthropicRaw(systemPrompt, history, maxTokens, attempt+1); }
+        throw new Error('AI 服務逾時（等了 25 秒沒回應），可能是網路不穩或服務忙碌，再試一次看看');
+      }
+      if(attempt < 2){ await new Promise(r=>setTimeout(r,700)); return callAnthropicRaw(systemPrompt, history, maxTokens, attempt+1); }
+      throw new Error((myKey?'':'（沒有設定自己的 API Key，用的是內建連線）') + '連不上 AI 服務：' + networkErr.message);
+    }
+    clearTimeout(timeoutId);
+    if(!res.ok){
+      let bodyText=''; try{ bodyText = await res.text(); }catch(e2){}
+      if((res.status === 503 || res.status === 529) && attempt < 4){
+        await new Promise(r=>setTimeout(r, attempt*1500));
+        return callAnthropicRaw(systemPrompt, history, maxTokens, attempt+1);
+      }
+      if(res.status !== 503 && res.status !== 529 && attempt < 2){
+        await new Promise(r=>setTimeout(r,700));
+        return callAnthropicRaw(systemPrompt, history, maxTokens, attempt+1);
+      }
+      throw new Error(`AI 服務回應錯誤（狀態碼 ${res.status}）：` + bodyText.slice(0,200));
+    }
+    const json = await res.json();
+    return (json.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+  }
+
+  async function callAIRaw(systemPrompt, promptOrHistory, maxTokens){
+    const history = typeof promptOrHistory === 'string' ? [{ role:'user', text: promptOrHistory }] : promptOrHistory;
+    const provider = localStorage.getItem('ai-provider') || 'gemini';
+    if(provider === 'anthropic') return callAnthropicRaw(systemPrompt, history, maxTokens);
+    return callGeminiRaw(systemPrompt, history, maxTokens);
+  }
+
+  async function callAiPlan(goalName, context){
+    const userMsg = `我的目標是：「${goalName}」。${context ? '補充背景：'+context : ''} 請幫我規劃課表。`;
+    const text = await callAIRaw(PLAN_SYS_PROMPT, userMsg, 3000);
+    return extractTasksJson(text);
+  }
+
+  // ================= AI contribution scoring (from a free-text daily note) =================
+  const CONTRIB_SYS_PROMPT = "你是一位務實的目標教練，負責判斷使用者「今天做的事」對他各個目標的貢獻程度。只回傳 JSON，不要有任何其他文字、不要 markdown code fence。JSON 格式：{\"contributions\":[{\"goalId\":\"...\",\"delta\":數字,\"reason\":\"一句話說明\"}]}。評分標準（以目標達成 100% 為滿分，請嚴格區分下面四個層級，不要混用）：1) 微小的日常累積行動（例如讀書20-30分鐘、背單字、寫幾題）給 0.1~1 分。2) 排定、答應、報名、投遞這類「往前推進一步，但事情本身還沒有實際發生或還沒有結果」的準備動作（例如答應/排定一場面試、報名考試、投遞履歷、約好一個會議）給 0.5~2 分，不要因為對方公司或機構很重要就給太高，因為使用者只是「安排」了這件事，還沒有真正完成它。3) 有明確產出、確實執行完成的行動（例如寫完一份履歷、做完一次模擬考、實際去面試了、存了一筆錢）給 1~5 分。4) 重要里程碑、確定已經達成的結果（例如通過考試、面試後拿到下一輪或 offer、做出重大人生決定、正式簽約入職）給 8~25 分。5) 請運用你自己的知識判斷相關性與品質，例如使用者提到某公司、某書籍，依你所知其在相關領域的定位與含金量，微調同一層級內的分數高低（但不能因此跨層級給分，「答應面試」永遠屬於第2級，不會因為公司知名就變成第4級的分數）。6) 如果是你不熟悉、無法判斷品質的事物，給該層級中間偏保守的分數即可，不要瞎猜或過度誇大。7) 同一則記錄可以同時貢獻給多個目標，只要有實質關聯就都列入。8) 如果跟某個目標完全不相關，不要把該目標列入陣列。9) delta 一律是正數，reason 用繁體中文、一句話、20字以內，說明給分理由與所屬層級。";
+
+  function extractContributions(rawText){
+    let clean = rawText.replace(/```json/g,'').replace(/```/g,'').trim();
+    const firstBrace = clean.indexOf('{');
+    const lastBrace = clean.lastIndexOf('}');
+    if(firstBrace>=0 && lastBrace>=0) clean = clean.slice(firstBrace, lastBrace+1);
+    try{
+      const parsed = JSON.parse(clean);
+      if(Array.isArray(parsed.contributions)){
+        return parsed.contributions.filter(c => c && c.goalId && typeof c.delta==='number' && c.delta>0);
+      }
+    }catch(e){ /* soft-fail: treat as no contributions found */ }
+    return [];
+  }
+
+  async function analyzeContribution(noteText){
+    if(data.goals.length===0) return [];
+    const goalList = data.goals.map(g=>`${g.id} | ${g.name}（目前進度 ${(g.progress||0).toFixed(1)}%）`).join('\n');
+    const userPrompt = `使用者今天做的事：「${noteText}」\n\n使用者的目標清單（格式：id | 目標名稱）：\n${goalList}\n\n請判斷這則記錄對哪些目標有貢獻、貢獻多少分，並給出簡短理由。`;
+    const raw = await callAIRaw(CONTRIB_SYS_PROMPT, userPrompt, 800);
+    return extractContributions(raw);
+  }
+
+  // ================= Delete entry / retry failed contribution analysis =================
+  async function deleteEntry(entryId, refreshDayModal){
+    const idx = data.entries.findIndex(e=>e.id===entryId);
+    if(idx<0) return;
+    const entry = data.entries[idx];
+    if(!confirm('確定要刪除這篇紀錄嗎？如果這篇有幫目標加過分數，分數也會一併扣回去。')) return;
+    (entry.contributions||[]).forEach(c=>{
+      const goal = data.goals.find(g=>g.id===c.goalId);
+      if(goal) goal.progress = Math.max(0, (goal.progress||0) - c.delta);
+    });
+    data.entries.splice(idx,1);
+    await saveData();
+    render();
+    if(refreshDayModal) refreshDayModal();
+    showToast('已刪除這篇紀錄');
+  }
+
+  async function retryContribution(entryId, refreshFn){
+    const entry = data.entries.find(e=>e.id===entryId);
+    if(!entry || !entry.note) return;
+    showToast('重新請 AI 判斷中...');
+    try{
+      const result = await analyzeContribution(entry.note);
+      const contributions = [];
+      result.forEach(c=>{
+        const goal = data.goals.find(g=>g.id===c.goalId);
+        if(goal){
+          goal.progress = Math.min(100, Math.max(0, (goal.progress||0) + c.delta));
+          contributions.push({ goalId: goal.id, goalName: goal.name, delta: c.delta, reason: c.reason||'' });
+        }
+      });
+      entry.contributions = contributions;
+      entry.contributionStatus = 'ok';
+      entry.contributionError = '';
+      await saveData();
+      render();
+      if(refreshFn) refreshFn();
+      showToast(contributions.length>0 ? `✨ ${contributions.map(c=>`${c.goalName} +${c.delta}%`).join('、')}` : '這次判斷完，跟目標沒有明確關聯');
+    }catch(e){
+      console.error('[重試失敗]', e);
+      entry.contributionError = e.message || String(e);
+      await saveData();
+      if(refreshFn) refreshFn();
+      showToast('還是連不上，晚點再試試看');
+    }
+  }
+
+  // ================= AI check-in: overall status review & advice =================
+  const CHECKIN_SYS_PROMPT = "你是一位經驗豐富、誠實但溫暖的目標教練。根據使用者每個目標的現況（目前進度、最近的具體行動記錄、原本規劃的參考課表），給出精簡但有洞察力的檢視，並且願意跟使用者繼續討論、回答追問。用繁體中文回答，純文字，不要使用 markdown 符號（不要用 ** 或 # 或項目符號）。第一次回答時，針對每個目標，先寫目標名稱，接著寫一句「現況評估」（例如：進度穩定、有點停滯不前、方向可能需要調整、超前進度），再給 2-3 點具體、可執行的下一步建議，不要空泛的加油打氣。每個目標之間空一行。最後用一小段整體的簡短總結收尾。如果使用者後續追問，就直接自然地回答、繼續討論即可，不用重複整份報告的格式。";
+
+  let checkinHistory = [];
+
+  function renderCheckinGoalSelect(){
+    const sel = $('#checkinGoalSelect');
+    if(sel) sel.innerHTML = data.goals.map(g=>`<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+  }
+
+  async function runCheckIn(){
+    if(data.goals.length===0){ showToast('先新增目標才能檢視唷'); return; }
+    const overlay = $('#checkinOverlay');
+    const body = $('#checkinBody');
+    $('#checkinChatSection').style.display = 'none';
+    $('#checkinChatLog').innerHTML = '';
+    checkinHistory = [];
+    body.innerHTML = `<div class="ai-loading"><div class="spin"></div> AI 正在幫妳整理現況，大概 10-20 秒...</div>`;
+    overlay.classList.add('open');
+    try{
+      const contextParts = data.goals.map(goal=>{
+        const recent = data.entries
+          .filter(e => (e.contributions||[]).some(c=>c.goalId===goal.id))
+          .sort((a,b)=>b.timestamp-a.timestamp)
+          .slice(0,8)
+          .map(e=>{
+            const c = e.contributions.find(x=>x.goalId===goal.id);
+            return `- ${e.date}：${e.note || '(未寫文字)'}｜貢獻 +${c.delta}%｜${c.reason||''}`;
+          }).join('\n') || '（目前還沒有相關的行動紀錄）';
+        const roadmapStr = (goal.roadmap||[]).slice(0,25).map(t=>`${t.phase?'['+t.phase+'] ':''}${t.text}`).join('\n') || '（尚未規劃參考課表）';
+        return `【目標】${goal.name}（目前進度 ${(goal.progress||0).toFixed(1)}%）\n最近的行動記錄：\n${recent}\n參考課表重點：\n${roadmapStr}`;
+      }).join('\n\n---\n\n');
+      const userPrompt = `以下是我目前所有目標的狀況，請幫我檢視現況、看看是否在正確的道路上，並給我建議：\n\n${contextParts}`;
+      checkinHistory = [{ role:'user', text: userPrompt }];
+      const raw = await callAIRaw(CHECKIN_SYS_PROMPT, checkinHistory, 2500);
+      checkinHistory.push({ role:'assistant', text: raw });
+      body.innerHTML = `<div class="checkin-text">${escapeHtml(raw.trim())}</div>`;
+      renderCheckinGoalSelect();
+      $('#checkinChatSection').style.display = '';
+    }catch(e){
+      console.error('[現況檢視失敗]', e);
+      body.innerHTML = `<p style="font-size:12.5px;color:#D9436A;line-height:1.6;">檢視失敗了 🥺<br>錯誤訊息：${escapeHtml(e.message||String(e))}</p>`;
+    }
+  }
+
+  function appendChatBubble(role, text){
+    const log = $('#checkinChatLog');
+    const div = document.createElement('div');
+    div.className = 'chat-bubble ' + role;
+    const span = document.createElement('span');
+    span.className = 'bubble-text';
+    span.textContent = text;
+    div.appendChild(span);
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+    return span;
+  }
+
+  async function sendCheckinChat(){
+    const input = $('#checkinChatInput');
+    const text = input.value.trim();
+    if(!text || checkinHistory.length===0) return;
+    input.value = '';
+    appendChatBubble('user', text);
+    checkinHistory.push({ role:'user', text });
+    const sendBtn = $('#checkinChatSend');
+    sendBtn.disabled = true;
+    const placeholder = appendChatBubble('assistant', '思考中...');
+    try{
+      const raw = await callAIRaw(CHECKIN_SYS_PROMPT, checkinHistory, 1200);
+      checkinHistory.push({ role:'assistant', text: raw });
+      placeholder.textContent = raw.trim();
+    }catch(e){
+      console.error('[追問失敗]', e);
+      placeholder.textContent = '連線失敗了：' + (e.message||'').slice(0,50);
+      checkinHistory.pop(); // don't keep a broken turn in context for next message
+    }
+    sendBtn.disabled = false;
+    $('#checkinChatLog').scrollTop = $('#checkinChatLog').scrollHeight;
+  }
+
+  $('#checkinChatSend').addEventListener('click', sendCheckinChat);
+  $('#checkinChatInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendCheckinChat(); });
+
+  $('#checkinReplanBtn').addEventListener('click', async ()=>{
+    const goalId = $('#checkinGoalSelect').value;
+    const goal = data.goals.find(g=>g.id===goalId);
+    if(!goal) return;
+    if(!confirm(`確定要根據這次的討論，重新規劃「${goal.name}」的課表嗎？這會取代原本的參考課表內容。`)) return;
+    const btn = $('#checkinReplanBtn');
+    btn.disabled = true;
+    btn.textContent = '規劃中...';
+    try{
+      const convoSummary = checkinHistory.map(h => (h.role==='user'?'使用者':'教練') + '：' + h.text).join('\n\n').slice(0,3000);
+      const tasks = await callAiPlan(goal.name, `這是根據我們剛剛的討論做的重新規劃，請參考以下對話內容來調整方向：\n${convoSummary}`);
+      goal.roadmap = tasks.map(t=>({ id: uid(), text: t.text, phase: t.phase||'' }));
+      await saveData();
+      render();
+      showToast(`「${goal.name}」的課表已經根據討論重新規劃好了 🌸`);
+    }catch(e){
+      console.error('[依討論重新規劃失敗]', e);
+      showToast('重新規劃失敗了：' + (e.message||'').slice(0,50));
+    }
+    btn.disabled = false;
+    btn.textContent = '🔄 重新規劃';
+  });
+
+  $('#checkinBtn').addEventListener('click', runCheckIn);
+  $('#checkinRefresh').addEventListener('click', runCheckIn);
+  $('#checkinClose').addEventListener('click', ()=> $('#checkinOverlay').classList.remove('open'));
+  $('#checkinOverlay').addEventListener('click', (e)=>{ if(e.target.id==='checkinOverlay') $('#checkinOverlay').classList.remove('open'); });
+
+  // ================= Add Goal modal =================
+  let pendingTasks = null; // tasks awaiting confirmation before save
+  function openAddGoalModal(){
+    $('#goalModalTitle').textContent = '新增目標';
+    $('#goalNameInput').value = '';
+    $('#goalContextInput').value = '';
+    $('#pastePlanInput').value = '';
+    $('#aiPlanArea').innerHTML = '';
+    pendingTasks = null;
+    $('#goalModalOverlay').classList.add('open');
+    setTimeout(()=>$('#goalNameInput').focus(), 50);
+  }
+  function closeAddGoalModal(){
+    $('#goalModalOverlay').classList.remove('open');
+    pendingTasks = null;
+  }
+  $('#goalModalCancel').addEventListener('click', closeAddGoalModal);
+  $('#goalModalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='goalModalOverlay') closeAddGoalModal(); });
+
+  // ================= Backfill: check past entries against a newly added (or existing) goal =================
+  const BACKFILL_SYS_PROMPT = "你是一位務實的目標教練，任務是回顧使用者過去的每日紀錄，判斷哪些紀錄對一個「新設定的目標」有貢獻、貢獻多少分。只回傳 JSON，不要有任何其他文字、不要 markdown code fence。JSON 格式：{\"contributions\":[{\"entryIndex\":數字,\"delta\":數字,\"reason\":\"一句話說明\"}]}。評分標準（以目標達成 100% 為滿分，請嚴格區分下面四個層級，不要混用）：1) 微小的日常累積行動（例如讀書20-30分鐘、背單字、寫幾題）給 0.1~1 分。2) 排定、答應、報名、投遞這類「往前推進一步，但事情本身還沒有實際發生或還沒有結果」的準備動作（例如答應/排定一場面試、報名考試、投遞履歷）給 0.5~2 分，不要因為對方公司或機構很重要就給太高。3) 有明確產出、確實執行完成的行動（例如寫完一份履歷、做完一次模擬考、實際去面試了）給 1~5 分。4) 重要里程碑、確定已經達成的結果（例如通過考試、拿到 offer、正式簽約入職、重大決定）給 8~25 分。5) entryIndex 必須是「紀錄清單」中真實存在的序號，不要自己編。6) 如果某篇紀錄跟這個目標完全無關，不要列入。7) delta 一律是正數，reason 用繁體中文、一句話、20字以內。";
+
+  function extractBackfillContributions(rawText){
+    let clean = rawText.replace(/```json/g,'').replace(/```/g,'').trim();
+    const firstBrace = clean.indexOf('{');
+    const lastBrace = clean.lastIndexOf('}');
+    if(firstBrace>=0 && lastBrace>=0) clean = clean.slice(firstBrace, lastBrace+1);
+    try{
+      const parsed = JSON.parse(clean);
+      if(Array.isArray(parsed.contributions)){
+        return parsed.contributions.filter(c => c && typeof c.entryIndex==='number' && typeof c.delta==='number' && c.delta>0);
+      }
+    }catch(e){ /* soft-fail */ }
+    return [];
+  }
+
+  async function backfillContributionsForGoal(goal){
+    const entries = data.entries.filter(e => e.note && e.note.trim());
+    if(entries.length===0){ showToast('還沒有寫過任何日記，沒有東西可以回顧'); return; }
+    showToast('AI 正在回顧過去的紀錄，可能要一點時間...');
+    try{
+      const listStr = entries.map((e,i)=>`${i} | ${e.date} | ${e.note}`).join('\n');
+      const userPrompt = `以下是使用者過去每天寫的紀錄，請判斷有哪些對這個新目標「${goal.name}」有貢獻、貢獻多少分。\n\n紀錄清單（格式：序號 | 日期 | 內容）：\n${listStr}\n\n請針對這一個目標給出結果。`;
+      const raw = await callAIRaw(BACKFILL_SYS_PROMPT, userPrompt, 2500);
+      const results = extractBackfillContributions(raw);
+      let addedCount = 0;
+      let totalDelta = 0;
+      results.forEach(r=>{
+        const entry = entries[r.entryIndex];
+        if(!entry) return;
+        if(!entry.contributions) entry.contributions = [];
+        if(entry.contributions.some(c=>c.goalId===goal.id)) return; // avoid double-counting on repeat backfill
+        entry.contributions.push({ goalId: goal.id, goalName: goal.name, delta: r.delta, reason: r.reason||'' });
+        totalDelta += r.delta;
+        addedCount++;
+      });
+      if(addedCount>0){
+        goal.progress = Math.min(100, Math.max(0, (goal.progress||0) + totalDelta));
+        await saveData();
+        render();
+        showToast(`✨ 幫「${goal.name}」從過去找回 ${addedCount} 篇相關紀錄，加了 ${totalDelta.toFixed(1)}%`);
+      }else{
+        showToast('回顧完了，過去的紀錄目前跟這個目標沒有明確關聯');
+      }
+    }catch(e){
+      console.error('[回溯貢獻失敗]', e);
+      showToast('回顧過去紀錄時連線失敗了：' + (e.message||'').slice(0,50));
+    }
+  }
+
+  async function saveNewGoal(tasks){
+    const name = $('#goalNameInput').value.trim();
+    if(!name){ showToast('請先輸入目標名稱唷'); return; }
+    const goal = {
+      id: uid(), name, createdAt: Date.now(), progress: 0,
+      roadmap: (tasks||[]).map(t=>({ id: uid(), text: t.text, phase: t.phase||'' }))
+    };
+    data.goals.push(goal);
+    closeAddGoalModal();
+    await saveData();
+    render();
+    showToast('目標新增好了 🌸');
+
+    const pastEntries = data.entries.filter(e => e.note && e.note.trim());
+    if(pastEntries.length > 0 && hasAiKeyConfigured()){
+      const ok = confirm(`要順便檢查一下之前寫過的 ${pastEntries.length} 篇日記，看看有沒有哪些也算進「${name}」這個新目標嗎？`);
+      if(ok) await backfillContributionsForGoal(goal);
+    }
+  }
+
+  $('#goalModalSkipAi').addEventListener('click', ()=>{ saveNewGoal([]); });
+
+  async function runGenerate(){
+    const name = $('#goalNameInput').value.trim();
+    if(!name){ showToast('請先輸入目標名稱唷'); return; }
+    const context = $('#goalContextInput').value.trim();
+    const area = $('#aiPlanArea');
+    area.innerHTML = `<div class="ai-loading"><div class="spin"></div> AI 正在幫你規劃課表，大概 5-15 秒；如果伺服器忙碌會自動重試，可能久一點...</div>`;
+    $('#goalModalGenerate').disabled = true;
+    try{
+      const tasks = await callAiPlan(name, context);
+      pendingTasks = tasks;
+      renderPendingPlan(tasks);
+    }catch(e){
+      console.error('[AI 規劃失敗]', e);
+      area.innerHTML = `
+        <p style="font-size:12.5px;color:#D9436A;line-height:1.6;">AI 規劃失敗了 🥺<br>錯誤訊息：${escapeHtml(e.message||String(e))}</p>
+        <div class="modal-actions">
+          <button class="ghost" id="retryGenerateBtn">再試一次</button>
+        </div>
+      `;
+      const retryBtn = $('#retryGenerateBtn');
+      if(retryBtn) retryBtn.addEventListener('click', runGenerate);
+    }
+    $('#goalModalGenerate').disabled = false;
+  }
+  function parsePastedPlan(text){
+    const lines = text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+    const tasks = [];
+    let currentPhase = '';
+    lines.forEach(line=>{
+      const bulletMatch = line.match(/^[-•*・]\s*(.+)/) || line.match(/^\d+[\.\)、]\s*(.+)/) || line.match(/^[□☐✓✔]\s*(.+)/);
+      if(bulletMatch){
+        tasks.push({ phase: currentPhase, text: bulletMatch[1].trim() });
+      }else{
+        currentPhase = line.replace(/[:：]\s*$/, '');
+      }
+    });
+    return tasks;
+  }
+  $('#usePasteBtn').addEventListener('click', ()=>{
+    const text = $('#pastePlanInput').value.trim();
+    if(!text){ showToast('先貼上課表文字唷'); return; }
+    const tasks = parsePastedPlan(text);
+    if(tasks.length===0){ showToast('沒有偵測到任務，檢查一下格式（每個任務前面要有 - 或數字）'); return; }
+    pendingTasks = tasks;
+    renderPendingPlan(tasks);
+  });
+
+  $('#goalModalGenerate').addEventListener('click', runGenerate);
+
+  function renderPendingPlan(tasks){
+    const area = $('#aiPlanArea');
+    let html = '<p class="modal-hint" style="margin-top:14px;">這是 AI 幫你排的課表，可以直接使用：</p>';
+    let lastPhase = null;
+    tasks.forEach((t,i)=>{
+      if(t.phase && t.phase!==lastPhase){
+        html += `<div class="plan-phase-label">${escapeHtml(t.phase)}</div>`;
+        lastPhase = t.phase;
+      }
+      html += `<div class="plan-task-row"><span style="color:var(--pink);">•</span><span class="plan-task-text">${escapeHtml(t.text)}</span></div>`;
+    });
+    html += `<div class="modal-actions"><button class="primary" id="confirmPlanBtn">用這份課表 ✓</button></div>`;
+    area.innerHTML = html;
+    $('#confirmPlanBtn').addEventListener('click', ()=> saveNewGoal(pendingTasks));
+  }
+
+  goalsGrid && document.body.addEventListener('click', ()=>{}); // noop safeguard
+
+  // ================= Goal detail modal =================
+  function openDetailModal(goalId){
+    openGoalId = goalId;
+    renderDetailModal();
+    $('#detailModalOverlay').classList.add('open');
+  }
+  function closeDetailModal(){
+    $('#detailModalOverlay').classList.remove('open');
+    openGoalId = null;
+  }
+  $('#detailCloseBtn').addEventListener('click', closeDetailModal);
+  $('#detailModalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='detailModalOverlay') closeDetailModal(); });
+
+  function renderDetailModal(){
+    const goal = data.goals.find(g=>g.id===openGoalId);
+    if(!goal) return;
+    $('#detailGoalName').textContent = goal.name;
+    const pct = goalProgress(goal);
+    $('#detailPct').textContent = pct.toFixed(1)+'%';
+    $('#detailBarFill').style.width = Math.min(100,pct)+'%';
+    $('#detailBarFill').className = 'goal-bar-fill' + (pct>=100?' done':'');
+
+    const list = $('#detailTaskList');
+    if(!goal.roadmap || goal.roadmap.length===0){
+      list.innerHTML = '<p class="empty-plan-inline">還沒有參考課表，用下面的欄位新增，或請 AI 規劃。</p>';
+    }else{
+      let html = '<p class="modal-hint" style="margin:0 0 10px;">這份課表只是方向參考，不用照著打勾——進度是根據妳每天寫的紀錄，由 AI 自動判斷貢獻度算出來的。</p>';
+      let lastPhase = null;
+      goal.roadmap.forEach(t=>{
+        if(t.phase && t.phase!==lastPhase){
+          html += `<div class="plan-phase-label">${escapeHtml(t.phase)}</div>`;
+          lastPhase = t.phase;
+        }
+        html += `<div class="plan-task-row">
+          <span style="color:var(--pink);margin-top:2px;">•</span>
+          <span class="plan-task-text" style="flex:1;">${escapeHtml(t.text)}</span>
+          <button class="roadmap-del-btn" data-id="${t.id}" title="移除">×</button>
+        </div>`;
+      });
+      list.innerHTML = html;
+      list.querySelectorAll('.roadmap-del-btn').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          goal.roadmap = goal.roadmap.filter(t=>t.id!==btn.dataset.id);
+          await saveData();
+          renderDetailModal();
+        });
+      });
+    }
+  }
+
+  $('#addTaskBtn').addEventListener('click', async ()=>{
+    const goal = data.goals.find(g=>g.id===openGoalId);
+    const input = $('#addTaskInput');
+    const text = input.value.trim();
+    if(!goal || !text) return;
+    goal.roadmap.push({ id: uid(), text, phase:'自訂項目' });
+    input.value='';
+    await saveData();
+    renderDetailModal();
+    render();
+  });
+  $('#addTaskInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') $('#addTaskBtn').click(); });
+
+  $('#pasteMoreTasksBtn').addEventListener('click', async ()=>{
+    const goal = data.goals.find(g=>g.id===openGoalId);
+    const text = $('#pasteMoreTasksInput').value.trim();
+    if(!goal || !text){ showToast('先貼上任務文字唷'); return; }
+    const tasks = parsePastedPlan(text);
+    if(tasks.length===0){ showToast('沒有偵測到項目，一行一個就可以了'); return; }
+    tasks.forEach(t=> goal.roadmap.push({ id: uid(), text: t.text, phase: t.phase||'補充項目' }));
+    $('#pasteMoreTasksInput').value='';
+    await saveData();
+    renderDetailModal();
+    render();
+    showToast('項目加進去了 🌸');
+  });
+
+  $('#regenerateBtn').addEventListener('click', async ()=>{
+    const goal = data.goals.find(g=>g.id===openGoalId);
+    if(!goal) return;
+    $('#regenerateBtn').textContent = '規劃中...';
+    $('#regenerateBtn').disabled = true;
+    try{
+      const tasks = await callAiPlan(goal.name, '這是延伸補充，請給接下來可以做的新參考項目，不要重複已經有的。');
+      tasks.forEach(t=> goal.roadmap.push({ id: uid(), text: t.text, phase: t.phase||'AI 補充項目' }));
+      await saveData();
+      renderDetailModal();
+      render();
+      showToast('補充了新的參考項目 ✨');
+    }catch(e){
+      console.error('[AI 補充失敗]', e);
+      showToast('AI 補充失敗了：' + (e.message||String(e)).slice(0,60));
+    }
+    $('#regenerateBtn').textContent = '✨ AI 再幫我補充項目';
+    $('#regenerateBtn').disabled = false;
+  });
+
+  $('#backfillBtn').addEventListener('click', async ()=>{
+    const goal = data.goals.find(g=>g.id===openGoalId);
+    if(!goal) return;
+    $('#backfillBtn').disabled = true;
+    $('#backfillBtn').textContent = '回顧中...';
+    await backfillContributionsForGoal(goal);
+    renderDetailModal();
+    $('#backfillBtn').disabled = false;
+    $('#backfillBtn').textContent = '📚 回顧過去紀錄';
+  });
+
+  $('#renameGoalBtn').addEventListener('click', async ()=>{
+    const goal = data.goals.find(g=>g.id===openGoalId);
+    if(!goal) return;
+    const newName = prompt('改成什麼名稱？', goal.name);
+    if(newName && newName.trim()){
+      goal.name = newName.trim();
+      await saveData();
+      renderDetailModal();
+      render();
+    }
+  });
+
+  $('#deleteGoalBtn').addEventListener('click', async ()=>{
+    const goal = data.goals.find(g=>g.id===openGoalId);
+    if(!goal) return;
+    if(!confirm(`確定要刪除「${goal.name}」嗎？歷史紀錄裡的文字會保留。`)) return;
+    data.goals = data.goals.filter(g=>g.id!==goal.id);
+    closeDetailModal();
+    await saveData();
+    render();
+  });
+
+  // ================= Render: goals grid =================
+  function closeAllMenus(){ document.querySelectorAll('.goal-menu.open').forEach(m=>m.classList.remove('open')); }
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.goal-menu') && !e.target.closest('.goal-menu-btn')) closeAllMenus();
+  });
+
+  function buildSparkline(goal){
+    const w=200,h=38,pad=4;
+    const relevant = data.entries
+      .filter(e => (e.contributions||[]).some(c=>c.goalId===goal.id))
+      .sort((a,b)=>a.timestamp-b.timestamp);
+    if(relevant.length===0){
+      return `<svg class="sparkline" style="height:38px;margin:6px 0;" viewBox="0 0 ${w} ${h}"><line x1="4" y1="${h-6}" x2="${w-4}" y2="${h-6}" stroke="var(--pink-pale)" stroke-width="2" stroke-dasharray="3 4"/></svg>`;
+    }
+    let cum = 0;
+    const pts = [0];
+    relevant.forEach(e=>{
+      const c = e.contributions.find(x=>x.goalId===goal.id);
+      cum = Math.min(100, cum + (c ? c.delta : 0));
+      pts.push(cum);
+    });
+    const max = 100, min = 0;
+    const n = pts.length;
+    const stepX = n>1 ? (w-pad*2)/(n-1) : 0;
+    const coords = pts.map((v,i)=>{
+      const x = pad + stepX*i;
+      const y = h-pad-((v-min)/(max-min||1))*(h-pad*2);
+      return [x,y];
+    });
+    const path = 'M '+coords.map(c=>c[0].toFixed(1)+' '+c[1].toFixed(1)).join(' L ');
+    const area = path+' L '+coords[coords.length-1][0].toFixed(1)+' '+h+' L '+coords[0][0].toFixed(1)+' '+h+' Z';
+    const done = goalProgress(goal)>=100;
+    const color = done ? 'var(--gold)' : 'var(--pink)';
+    const last = coords[coords.length-1];
+    return `<svg class="sparkline" style="width:100%;height:38px;margin:6px 0;display:block;" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <path d="${area}" fill="${done?'rgba(255,200,87,0.15)':'rgba(255,111,160,0.13)'}" stroke="none"/>
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.2" fill="${color}"/>
+    </svg>`;
+  }
+
+  function renderGoals(){
+    goalsGrid.innerHTML='';
+    data.goals.forEach(goal=>{
+      const pct = goalProgress(goal);
+      const done = pct>=100;
+      const roadmapCount = goal.roadmap ? goal.roadmap.length : 0;
+      const card = document.createElement('div');
+      card.className = 'goal-card';
+      card.innerHTML = `
+        <div class="goal-top">
+          <div class="goal-name">${escapeHtml(goal.name)}</div>
+          <button class="goal-menu-btn" data-id="${goal.id}">⋯</button>
+          <div class="goal-menu" data-menu="${goal.id}">
+            <button data-act="open" data-id="${goal.id}">查看課表</button>
+            <button data-act="delete" data-id="${goal.id}" class="danger">刪除目標</button>
+          </div>
+        </div>
+        <div class="goal-pct ${done?'done':''}">${pct.toFixed(1)}<sup>%</sup></div>
+        <div class="goal-sub-count">${roadmapCount>0 ? roadmapCount+' 個參考項目' : '尚未規劃課表'}</div>
+        ${buildSparkline(goal)}
+        <div class="goal-bar-track"><div class="goal-bar-fill ${done?'done':''}" style="width:${Math.min(100,pct)}%"></div></div>
+        <div class="goal-meta"><span>${done?'🎉 已達成':'進行中'}</span></div>
+      `;
+      card.addEventListener('click', (e)=>{
+        if(e.target.closest('.goal-menu-btn') || e.target.closest('.goal-menu')) return;
+        openDetailModal(goal.id);
+      });
+      goalsGrid.appendChild(card);
+    });
+    const addCard = document.createElement('div');
+    addCard.className='add-goal-card';
+    addCard.innerHTML = '+ 新增目標';
+    addCard.addEventListener('click', openAddGoalModal);
+    goalsGrid.appendChild(addCard);
+
+    goalsGrid.querySelectorAll('.goal-menu-btn').forEach(btn=>{
+      btn.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const menu = goalsGrid.querySelector(`.goal-menu[data-menu="${id}"]`);
+        const isOpen = menu.classList.contains('open');
+        closeAllMenus();
+        if(!isOpen) menu.classList.add('open');
+      });
+    });
+    goalsGrid.querySelectorAll('.goal-menu button').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const act = btn.dataset.act;
+        closeAllMenus();
+        if(act==='open') openDetailModal(id);
+        if(act==='delete'){
+          const goal = data.goals.find(g=>g.id===id);
+          if(goal && confirm(`確定要刪除「${goal.name}」嗎？`)){
+            data.goals = data.goals.filter(g=>g.id!==id);
+            await saveData();
+            render();
+          }
+        }
+      });
+    });
+  }
+
+  // ================= Composer hint (no ticking — AI scores contributions automatically) =================
+  function hasAiKeyConfigured(){
+    const provider = localStorage.getItem('ai-provider') || 'gemini';
+    if(provider === 'anthropic') return !!localStorage.getItem('anthropic-api-key');
+    return !!localStorage.getItem('gemini-api-key');
+  }
+
+  function renderTaskSection(){
+    if(data.goals.length===0){
+      taskSection.innerHTML = '';
+      return;
+    }
+    const aiReady = hasAiKeyConfigured();
+    if(aiReady){
+      taskSection.innerHTML = '<p class="modal-hint" style="margin:14px 0 0;">✨ 不用勾選，AI 會自動判斷這則記錄對哪些目標有幫助、貢獻多少，也可能同時對到好幾個目標。</p>';
+    }else{
+      taskSection.innerHTML = '<p class="modal-hint" style="margin:14px 0 0;">💡 還沒設定 AI，紀錄會先存成日記，但不會自動計算貢獻度。到「⚙️ AI 設定」貼上 Key 就能啟用自動評分。</p>';
+    }
+  }
+
+  submitBtn.addEventListener('click', async ()=>{
+    const note = noteInput.value.trim();
+    const date = dateInput.value || todayStr();
+    if(!note && !selectedMood){
+      showToast('寫點什麼，或選個心情吧 🌷');
+      return;
+    }
+    submitBtn.disabled = true;
+    const originalLabel = submitBtn.textContent;
+    const aiReady = hasAiKeyConfigured();
+    let contributions = [];
+    let detectionFailed = false;
+    let failReason = '';
+    let status = 'skipped'; // 'ok' = AI ran (even if it found nothing relevant), 'failed' = AI call errored, 'skipped' = didn't attempt (no key/goals/note)
+
+    if(aiReady && note && data.goals.length>0){
+      submitBtn.textContent = '✨ AI 判斷中...';
+      try{
+        const result = await analyzeContribution(note);
+        result.forEach(c=>{
+          const goal = data.goals.find(g=>g.id===c.goalId);
+          if(goal){
+            goal.progress = Math.min(100, Math.max(0, (goal.progress||0) + c.delta));
+            contributions.push({ goalId: goal.id, goalName: goal.name, delta: c.delta, reason: c.reason||'' });
+          }
+        });
+        status = 'ok';
+      }catch(e){
+        console.error('[貢獻判斷失敗]', e);
+        detectionFailed = true;
+        status = 'failed';
+        failReason = e.message || String(e);
+      }
+    }
+
+    data.entries.push({ id: uid(), date, note, mood: selectedMood, contributions, contributionStatus: status, contributionError: failReason, timestamp: Date.now() });
+    await saveData();
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalLabel;
+    noteInput.value='';
+    selectedMood = null;
+    renderMoodRow();
+
+    if(detectionFailed){
+      showToast('AI 判斷貢獻度時連不上，先幫妳存成一般紀錄了，可以到歷史紀錄裡重試');
+    }else if(contributions.length>0){
+      const summary = contributions.map(c=>`${c.goalName} +${c.delta}%`).join('、');
+      showToast(`✨ ${summary}`);
+    }else{
+      showToast('已記錄今天 🌸');
+    }
+
+    const justContributedGoalIds = new Set(contributions.map(c=>c.goalId));
+    const celebrateGoals = data.goals.filter(g => justContributedGoalIds.has(g.id) && goalProgress(g)>=100);
+    render();
+    if(celebrateGoals.length>0) setTimeout(()=>showToast('有目標達成 100% 囉 🎉'), 2200);
+  });
+
+  // ================= Ledger =================
+  function buildEntryTagsHtml(entry){
+    if(entry.contributionStatus === 'failed'){
+      return `<span class="tag fail" title="${escapeHtml(entry.contributionError||'')}">⚠️ AI 分析失敗</span><button class="retry-btn" data-retry="${entry.id}">重試</button>`;
+    }
+    const tags = (entry.contributions||[]).map(c=>`<span class="tag" title="${escapeHtml(c.reason||'')}">${escapeHtml(c.goalName)} +${c.delta}%</span>`).join('');
+    return tags || '<span class="tag plain">日常紀錄</span>';
+  }
+
+  function buildEntryHtml(entry){
+    return `<div class="entry" data-entry-id="${entry.id}">
+      <button class="entry-del-btn" data-del="${entry.id}" title="刪除這篇">×</button>
+      ${entry.note ? `<div class="entry-note">${entry.mood?`<span class="day-modal-mood">${entry.mood}</span>`:''}${escapeHtml(entry.note)}</div>` : (entry.mood?`<div class="entry-note"><span class="day-modal-mood">${entry.mood}</span></div>`:'')}
+      <div class="entry-tags">${buildEntryTagsHtml(entry)}</div>
+    </div>`;
+  }
+
+  function wireEntryActions(container, refreshFn){
+    container.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); deleteEntry(btn.dataset.del, refreshFn); });
+    });
+    container.querySelectorAll('[data-retry]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); retryContribution(btn.dataset.retry, refreshFn); });
+    });
+  }
+
+  function renderLedger(){
+    ledgerBody.innerHTML='';
+    if(data.entries.length===0){
+      ledgerBody.innerHTML = '<div class="empty-state">還沒有任何紀錄，從今天寫下第一筆開始吧 🌱</div>';
+      return;
+    }
+    const byDate = {};
+    data.entries.slice().sort((a,b)=>b.timestamp-a.timestamp).forEach(e=>{
+      if(!byDate[e.date]) byDate[e.date]=[];
+      byDate[e.date].push(e);
+    });
+    const dates = Object.keys(byDate).sort((a,b)=> new Date(b)-new Date(a));
+    dates.forEach(date=>{
+      const group = document.createElement('div');
+      group.className='day-group';
+      const label = document.createElement('div');
+      label.className='day-label';
+      label.textContent = formatDateLabel(date);
+      group.appendChild(label);
+      byDate[date].forEach(entry=>{
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = buildEntryHtml(entry);
+        group.appendChild(wrapper.firstElementChild);
+      });
+      ledgerBody.appendChild(group);
+    });
+    wireEntryActions(ledgerBody, renderLedger);
+  }
+  function formatDateLabel(dateStr){
+    const d = new Date(dateStr+'T00:00:00');
+    const today = new Date(todayStr()+'T00:00:00');
+    const diffDays = Math.round((today-d)/86400000);
+    const weekday = ['日','一','二','三','四','五','六'][d.getDay()];
+    const base = `${d.getMonth()+1}/${d.getDate()} (週${weekday})`;
+    if(diffDays===0) return `今天 · ${base}`;
+    if(diffDays===1) return `昨天 · ${base}`;
+    return base;
+  }
+
+  // ================= Streak =================
+  function renderStreak(){
+    const dateSet = new Set(data.entries.map(e=>e.date));
+    if(dateSet.size===0){ streakBox.innerHTML='🌸 開始你的第一筆紀錄'; return; }
+    let streak=0;
+    let cursor = new Date(todayStr()+'T00:00:00');
+    if(!dateSet.has(todayStr())) cursor.setDate(cursor.getDate()-1);
+    while(true){
+      const key = cursor.getFullYear()+'-'+String(cursor.getMonth()+1).padStart(2,'0')+'-'+String(cursor.getDate()).padStart(2,'0');
+      if(dateSet.has(key)){ streak++; cursor.setDate(cursor.getDate()-1); } else break;
+    }
+    streakBox.innerHTML = `💗 <b>${streak}</b> 天連續紀錄`;
+  }
+
+  // ================= Calendar view =================
+  let calendarState = (function(){ const n=new Date(); return { year:n.getFullYear(), month:n.getMonth() }; })();
+
+  function switchLedgerView(view){
+    $('#tabList').classList.toggle('active', view==='list');
+    $('#tabCalendar').classList.toggle('active', view==='calendar');
+    $('#listView').style.display = view==='list' ? '' : 'none';
+    $('#calendarView').style.display = view==='calendar' ? '' : 'none';
+    if(view==='calendar') renderCalendar();
+  }
+  $('#tabList').addEventListener('click', ()=> switchLedgerView('list'));
+  $('#tabCalendar').addEventListener('click', ()=> switchLedgerView('calendar'));
+  $('#calPrev').addEventListener('click', ()=>{
+    calendarState.month--;
+    if(calendarState.month<0){ calendarState.month=11; calendarState.year--; }
+    renderCalendar();
+  });
+  $('#calNext').addEventListener('click', ()=>{
+    calendarState.month++;
+    if(calendarState.month>11){ calendarState.month=0; calendarState.year++; }
+    renderCalendar();
+  });
+
+  function renderCalendar(){
+    const map = {};
+    data.entries.forEach(e=>{ (map[e.date] = map[e.date]||[]).push(e); });
+    const y = calendarState.year, m = calendarState.month;
+    $('#calTitle').textContent = `${y} 年 ${m+1} 月`;
+    const firstDay = new Date(y,m,1).getDay();
+    const daysInMonth = new Date(y,m+1,0).getDate();
+    const tKey = todayStr();
+    let html='';
+    for(let i=0;i<firstDay;i++) html += '<div class="cal-cell empty"></div>';
+    for(let d=1; d<=daysInMonth; d++){
+      const key = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const dayEntries = map[key]||[];
+      const moodEntry = dayEntries.find(e=>e.mood);
+      html += `<div class="cal-cell ${key===tKey?'today':''}" data-date="${key}">
+        <span class="day-num">${d}</span>
+        ${moodEntry ? `<span class="day-mood">${moodEntry.mood}</span>` : (dayEntries.length ? '<span class="day-dot"></span>' : '')}
+      </div>`;
+    }
+    $('#calGrid').innerHTML = html;
+    $('#calGrid').querySelectorAll('.cal-cell[data-date]').forEach(cell=>{
+      cell.addEventListener('click', ()=> openDayModal(cell.dataset.date));
+    });
+  }
+
+  function openDayModal(dateKey){
+    const entries = data.entries.filter(e=>e.date===dateKey).sort((a,b)=>a.timestamp-b.timestamp);
+    $('#dayModalTitle').textContent = formatDateLabel(dateKey);
+    const body = $('#dayModalBody');
+    if(entries.length===0){
+      body.innerHTML = '<div class="empty-state" style="padding:26px 10px;">這天還沒有紀錄唷 🌱</div>';
+    }else{
+      body.innerHTML = entries.map(buildEntryHtml).join('');
+      wireEntryActions(body, ()=> openDayModal(dateKey));
+    }
+    $('#dayModalOverlay').classList.add('open');
+  }
+  $('#dayModalClose').addEventListener('click', ()=> $('#dayModalOverlay').classList.remove('open'));
+  $('#dayModalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='dayModalOverlay') $('#dayModalOverlay').classList.remove('open'); });
+
+  function render(){
+    renderGoals();
+    renderTaskSection();
+    renderMoodRow();
+    renderLedger();
+    renderStreak();
+    if($('#calendarView').style.display !== 'none') renderCalendar();
+  }
+
+  // ================= Export / Import: JSON backup (for manual cross-device sync) =================
+  $('#exportJsonBtn').addEventListener('click', ()=>{
+    if(data.goals.length===0 && data.entries.length===0){ showToast('目前還沒有資料可以匯出'); return; }
+    const backup = JSON.stringify({ exportedAt: new Date().toISOString(), goals: data.goals, entries: data.entries }, null, 2);
+    const blob = new Blob([backup], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = '顯化帳本_備份_'+todayStr()+'.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('備份已下載 💾 到另一台裝置時可以「匯入備份」還原');
+  });
+
+  $('#importJsonBtn').addEventListener('click', ()=> $('#importFileInput').click());
+  $('#importFileInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev)=>{
+      try{
+        const parsed = JSON.parse(ev.target.result);
+        if(!parsed.goals || !parsed.entries || !Array.isArray(parsed.goals) || !Array.isArray(parsed.entries)){
+          throw new Error('檔案格式不是「顯化帳本」的備份檔');
+        }
+        const ok = confirm(`確定要匯入這份備份嗎？\n\n這會覆蓋目前這台裝置上看到的所有目標與紀錄（共 ${parsed.goals.length} 個目標、${parsed.entries.length} 筆紀錄）。建議先用「匯出備份」保留目前的內容，再匯入。`);
+        if(!ok) return;
+        data = { goals: parsed.goals, entries: parsed.entries };
+        await saveData();
+        render();
+        showToast('備份已匯入，進度同步完成 🌸');
+      }catch(err){
+        console.error('[匯入失敗]', err);
+        showToast('匯入失敗：' + (err.message||'檔案格式不正確'));
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  // ================= Export: PNG =================
+  $('#exportImgBtn').addEventListener('click', ()=>{
+    if(data.goals.length===0){ showToast('先新增目標才能匯出唷'); return; }
+    const W=720, rowH=96, padTop=140, padBottom=60;
+    const H = padTop + data.goals.length*rowH + padBottom;
+    const canvas = document.createElement('canvas');
+    canvas.width=W; canvas.height=H;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,W,H);
+    grad.addColorStop(0,'#FBEAE3'); grad.addColorStop(1,'#F3D8D1');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle = '#6B4A45';
+    ctx.font = '700 30px "Noto Sans TC", sans-serif';
+    ctx.fillText('✨ 顯化帳本 · 我的進度', 40, 60);
+    ctx.font = '400 14px "Noto Sans TC", sans-serif';
+    ctx.fillStyle = '#A9847E';
+    const now = new Date();
+    ctx.fillText(`匯出時間：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`, 40, 86);
+
+    data.goals.forEach((goal,i)=>{
+      const y = padTop + i*rowH;
+      const pct = goalProgress(goal);
+      ctx.fillStyle = '#6B4A45';
+      ctx.font = '700 18px "Noto Sans TC", sans-serif';
+      ctx.fillText(goal.name, 40, y+8);
+      ctx.font = '700 22px "Noto Sans TC", sans-serif';
+      ctx.fillStyle = '#AD6E67';
+      ctx.textAlign='right';
+      ctx.fillText(pct.toFixed(1)+'%', W-40, y+8);
+      ctx.textAlign='left';
+
+      const barX=40, barY=y+22, barW=W-80, barH=14;
+      ctx.fillStyle='#F1D9D3';
+      roundRect(ctx, barX, barY, barW, barH, 7); ctx.fill();
+      const fillW = Math.max(barH, barW*Math.min(100,pct)/100);
+      const barGrad = ctx.createLinearGradient(barX,0,barX+fillW,0);
+      if(pct>=100){ barGrad.addColorStop(0,'#DDAE6E'); barGrad.addColorStop(1,'#F3D9AE'); }
+      else { barGrad.addColorStop(0,'#CC8E88'); barGrad.addColorStop(1,'#B48A83'); }
+      ctx.fillStyle=barGrad;
+      roundRect(ctx, barX, barY, fillW, barH, 7); ctx.fill();
+
+      const roadmapCount = goal.roadmap ? goal.roadmap.length : 0;
+      ctx.fillStyle='#CDB4AC';
+      ctx.font='400 12px "Noto Sans TC", sans-serif';
+      ctx.fillText(roadmapCount>0 ? `${roadmapCount} 個參考項目` : '尚未規劃課表', 40, y+56);
+    });
+
+    ctx.fillStyle='#CDB4AC';
+    ctx.font='400 12px "Noto Sans TC", sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('由 顯化帳本 產生 🌸', W/2, H-24);
+
+    canvas.toBlob(blob=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download='顯化帳本_進度_'+todayStr()+'.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('圖片已下載 🖼️');
+    });
+  });
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  // ================= Export: CSV =================
+  $('#exportCsvBtn').addEventListener('click', ()=>{
+    if(data.entries.length===0 && data.goals.length===0){ showToast('目前還沒有資料可以匯出'); return; }
+    function csvEsc(s){ s=String(s==null?'':s); if(/[",\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"'; return s; }
+    let lines = [];
+    lines.push('=== 目標總覽 ===');
+    lines.push(['目標名稱','進度(%)','參考項目數'].join(','));
+    data.goals.forEach(g=>{
+      const total = g.roadmap?g.roadmap.length:0;
+      lines.push([csvEsc(g.name), goalProgress(g).toFixed(2), total].join(','));
+    });
+    lines.push('');
+    lines.push('=== 每日紀錄 ===');
+    lines.push(['日期','心情','筆記','貢獻'].join(','));
+    data.entries.slice().sort((a,b)=>a.timestamp-b.timestamp).forEach(e=>{
+      const contribStr = (e.contributions||[]).map(c=>`${c.goalName}:+${c.delta}%(${c.reason||''})`).join('; ');
+      lines.push([e.date, e.mood||'', csvEsc(e.note), csvEsc(contribStr)].join(','));
+    });
+    const csv = '\uFEFF' + lines.join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download='顯化帳本_紀錄_'+todayStr()+'.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('CSV 已下載 📄');
+  });
+
+  // ================= AI settings (bring-your-own API key: Gemini or Anthropic) =================
+  function toggleProviderFields(){
+    const provider = $('#aiProviderSelect').value;
+    $('#geminiFields').style.display = provider==='gemini' ? '' : 'none';
+    $('#anthropicFields').style.display = provider==='anthropic' ? '' : 'none';
+  }
+  $('#aiProviderSelect').addEventListener('change', toggleProviderFields);
+
+  $('#aiSettingsBtn').addEventListener('click', ()=>{
+    $('#aiProviderSelect').value = localStorage.getItem('ai-provider') || 'gemini';
+    $('#geminiApiKeyInput').value = localStorage.getItem('gemini-api-key') || '';
+    $('#anthropicApiKeyInput').value = localStorage.getItem('anthropic-api-key') || '';
+    $('#aiModelSelect').value = localStorage.getItem('anthropic-model') || 'claude-sonnet-5';
+    toggleProviderFields();
+    $('#aiSettingsOverlay').classList.add('open');
+  });
+  $('#aiSettingsClose').addEventListener('click', ()=> $('#aiSettingsOverlay').classList.remove('open'));
+  $('#aiSettingsOverlay').addEventListener('click', (e)=>{ if(e.target.id==='aiSettingsOverlay') $('#aiSettingsOverlay').classList.remove('open'); });
+  $('#aiSettingsSave').addEventListener('click', ()=>{
+    const provider = $('#aiProviderSelect').value;
+    localStorage.setItem('ai-provider', provider);
+    if(provider==='gemini'){
+      const key = $('#geminiApiKeyInput').value.trim();
+      if(key){ localStorage.setItem('gemini-api-key', key); showToast('已儲存，之後 AI 規劃會用 Gemini 🌸'); }
+      else{ showToast('請先貼上 Gemini API Key'); return; }
+    }else{
+      const key = $('#anthropicApiKeyInput').value.trim();
+      const model = $('#aiModelSelect').value;
+      if(key){
+        localStorage.setItem('anthropic-api-key', key);
+        localStorage.setItem('anthropic-model', model);
+        showToast('已儲存，之後 AI 規劃會用 Anthropic 🌸');
+      }else{ showToast('請先貼上 Anthropic API Key'); return; }
+    }
+    $('#aiSettingsOverlay').classList.remove('open');
+    renderTaskSection();
+  });
+  $('#aiSettingsClear').addEventListener('click', ()=>{
+    localStorage.removeItem('gemini-api-key');
+    localStorage.removeItem('anthropic-api-key');
+    localStorage.removeItem('anthropic-model');
+    localStorage.removeItem('ai-provider');
+    $('#geminiApiKeyInput').value='';
+    $('#anthropicApiKeyInput').value='';
+    renderTaskSection();
+    showToast('已清除所有已儲存的 Key');
+  });
+
+  loadData();
+})();
+</script>
+</body>
+</html>
